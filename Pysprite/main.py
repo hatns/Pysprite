@@ -17,6 +17,8 @@ frames_per_second = 1000
 # Initiate PyGame
 window = pygame.display.set_mode(screen_dimensions)
 pygame_clock = pygame.time.Clock()
+icon = pygame.image.load("icon.png")
+pygame.display.set_icon(icon)
 
 # Function definitions
 def game_exit(): # Function to exit game:
@@ -348,6 +350,7 @@ draw_overlay(overlay)
 # Main Loop
 game_loop_count = 0
 while game_enabled:
+    pygame.display.set_caption(str("Pyxelart | 1.0"))
     window.fill((0,0,0))
     grid.draw()
     window.blits([(grid.surface, (0,0)), (sidebar, (512, 0)), (overlay, (0,0))])
