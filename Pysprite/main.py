@@ -6,6 +6,9 @@ from modules.mouse import Mouse
 from modules.overlay import draw_overlay
 from PIL import Image
 from tkinter import Tk, filedialog
+from os.path import join as pathjoin
+import sys
+import modules.icon as ico
 root = Tk()
 root.withdraw()
 # Global variables
@@ -13,12 +16,10 @@ game_enabled = True
 screen_dimensions = (512+128, 512)
 frames_per_second = 1000
 
-
 # Initiate PyGame
 window = pygame.display.set_mode(screen_dimensions)
 pygame_clock = pygame.time.Clock()
-icon = pygame.image.load("icon.png")
-pygame.display.set_icon(icon)
+pygame.display.set_icon(ico.get_surface())
 
 # Function definitions
 def game_exit(): # Function to exit game:
@@ -339,6 +340,7 @@ def mouse_update():
                     mouse.get_function(sidebar_functions)()
             except TypeError:
                 pass
+
 
 overlay = pygame.Surface(screen_dimensions, pygame.SRCALPHA)
 
