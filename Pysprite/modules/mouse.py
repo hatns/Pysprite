@@ -1,9 +1,8 @@
 import pygame
-# RETRIEVES AND SETS BUTTON CONTEXT FROM MOUSE
-# 
+# RETRIEVES BUTTON CONTEXT FROM MOUSE
 
 class Mouse:
-    def __init__(self, grid, sidebar):
+    def __init__(self, grid):
         self.grid_dimensions = grid.dimensions
         self.mouse = pygame.mouse
 

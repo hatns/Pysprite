@@ -4,10 +4,14 @@ from modules.gameutils import EventHandler, GameHandler
 from modules.grid import Grid, RGBA
 from modules.mouse import Mouse
 from PIL import Image
+from tkinter import Tk, filedialog
+root = Tk()
+root.withdraw()
 # Global variables
 game_enabled = True
 screen_dimensions = (512+128, 512)
 frames_per_second = 1000
+
 
 # Initiate PyGame
 window = pygame.display.set_mode(screen_dimensions)
@@ -62,33 +66,61 @@ def draw_minus(index_x, index_y):
 
 
 pygame.font.init()
-with open("font.ttf") as f:
-    font = pygame.font.Font("font.ttf", 28)
+font = pygame.font.SysFont("notosans.ttf", 28)
 
-def draw_value(color, index_y, color_rgbazname):
+def draw_value(value, index_y, color_rgbazname):
     mid_y = index_y*32 - 16
     if color_rgbazname == "z":
-        surface = font.render(str(color)+"x"+str(color), True, (256-color*4,256-color*4,256-color*4))
+        surface = font.render(str(value)+"x"+str(value), True, (256-value*2,256-value*2,256-value*2))
     if color_rgbazname == "r":
-        surface = font.render(str(color), True, (255-color, 0, 0))
+        surface = font.render(str(value), True, (255-value, 0, 0))
     if color_rgbazname == "g":
-        surface = font.render(str(color), True, (0, 255-color, 0))
+        surface = font.render(str(value), True, (0, 255-value, 0))
     if color_rgbazname == "b":
-        surface = font.render(str(color), True, (0, 0, 255-color))
+        surface = font.render(str(value), True, (0, 0, 255-value))
     if color_rgbazname == "a":
-        surface = font.render(str(color), True, (255-color, 255-color, 255-color))
-    if color_rgbazname == "s":
-        surface = font.render("Save", True, (0, 0, 0))
+        surface = font.render(str(value), True, (255-value, 255-value, 255-value))
+    if color_rgbazname == "o":
+        surface = font.render(value, True, (0,0,0))
     x = int(64 - surface.get_width() / 2)
     y = int(mid_y - surface.get_height() / 2)
     window.blit(surface, (512 + x, y))
+import requests
 
 def save_button():
     pygame.draw.rect(sidebar, (0, 255, 0), (0, 448, 128, 64))
-    draw_value(0, 15.5, "s")
+    draw_value("Save & Exit", 15.5, "o")
 
+def fill_button():
+    pygame.draw.rect(sidebar, (124, 124, 124), (0, 320, 128, 32))
+    draw_value("Fill Screen", 11, "o")
 
-def update_sidebar():
+def clear_button():
+    pygame.draw.rect(sidebar, (173, 173, 173), (0, 352, 128, 32))
+    draw_value("Clear", 12, "o")
+
+eraser_active = False
+def eraser_button():
+    y = 416
+    pygame.draw.rect(sidebar, (255, 255, 255), (0, y, 128, 32))
+    if eraser_active:
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, y, 128, 4))
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, y, 4, 32))
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, y+28, 128, 4))
+        pygame.draw.rect(sidebar, (100, 200, 100), (124, y, 4, 32))
+    draw_value("Eraser", 14, "o")
+
+colorpicker_active = False
+def color_picker_button():
+    pygame.draw.rect(sidebar, (223, 223, 223), (0, 384, 128, 32))
+    if colorpicker_active:
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, 384, 128, 4))
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, 384, 4, 32))
+        pygame.draw.rect(sidebar, (100, 200, 100), (0, 412, 128, 4))
+        pygame.draw.rect(sidebar, (100, 200, 100), (124, 384, 4, 32))
+    draw_value("Color Picker", 13, "o")
+
+def sidebar_update():
     # decrease grid size
     pygame.draw.rect(sidebar, (130, 130, 130), (0, 32, 64, 32))
     # increase grid size
@@ -141,6 +173,10 @@ def update_sidebar():
     draw_value(b, 7, "b")
     draw_value(a, 9, "a")
     save_button()
+    fill_button()
+    clear_button()
+    color_picker_button()
+    eraser_button()
 
 
 
@@ -206,9 +242,44 @@ def save():
     for y, row in enumerate(grid.cell_rows):
         for x, col in enumerate(row):
             img.putpixel((x, y), (col.r, col.g, col.b, col.a))
-    img.save("image.png")
+    file_path = filedialog.asksaveasfilename(defaultextension='.png', initialfile="image.png", initialdir=".")
+    try:
+        img.save(file_path)
+    except Exception:
+        pass
+    exit()
             
+def fill():
+    for y, row in enumerate(grid.cell_rows):
+        for x, col in enumerate(row):
+            col.r = current_color[0]
+            col.g = current_color[1]
+            col.b = current_color[2]
+            col.a = current_color[3]
 
+def clear():
+    for y, row in enumerate(grid.cell_rows):
+        for x, col in enumerate(row):
+            col.r = 0
+            col.g = 0
+            col.b = 0
+            col.a = 0
+
+mcp_t = time.time() # Throttle
+def colorpicker():
+    global colorpicker_active, mcp_t, eraser_active
+    if time.time() - mcp_t > 0.1:
+        colorpicker_active = not colorpicker_active
+        eraser_active = False
+    mcp_t = time.time()   
+
+mer_t = time.time() 
+def eraser():
+    global eraser_active, mer_t, colorpicker_active
+    if time.time() - mer_t > 0.1:
+        colorpicker_active = False
+        eraser_active = not eraser_active
+    mer_t = time.time() 
 
 # Functions to be called for clicks inside each 64x32 pixel area on the sidebar.
 sidebar_functions = [
@@ -222,10 +293,10 @@ sidebar_functions = [
     [dec_blue, inc_blue],
     [None, None],
     [dec_alpha, inc_alpha],
-    [None, None],
-    [None, None],
-    [None, None],
-    [None, None],
+    [fill, fill],
+    [clear, clear],
+    [colorpicker, colorpicker],
+    [eraser, eraser],
     [save, save],
     [save, save],
 ]
@@ -233,27 +304,41 @@ sidebar_functions = [
 
 
 # Create mouse reference
-mouse = Mouse(grid, sidebar)
+mouse = Mouse(grid)
 
 
 # Function for drawing squares
 
+is_drawing = False
+
 def mouse_update():
+    global is_drawing, colorpicker_active, current_color
     # Check for left clicks
+    if not pygame.mouse.get_pressed()[0]:
+        is_drawing = False
     if pygame.mouse.get_pressed()[0]:
         # If mouse is positioned within the "grid" area, draw.
-        if pygame.mouse.get_pos()[0] < grid_dimensions[0] and pygame.mouse.get_pos()[1] < grid_dimensions[1]: 
+        if 0 < pygame.mouse.get_pos()[0] < grid_dimensions[0] and 0 < pygame.mouse.get_pos()[1] < grid_dimensions[1]: 
+            if colorpicker_active:
+                square = grid.cell_rows[mouse.get_square(grid_dimensions, sprite_pixels)[1]][mouse.get_square(grid_dimensions, sprite_pixels)[0]]
+                current_color = (square.r, square.g, square.b, square.a)
+                return
+            is_drawing = True
+            if eraser_active:
+                grid.cell_rows[mouse.get_square(grid_dimensions, sprite_pixels)[1]][mouse.get_square(grid_dimensions, sprite_pixels)[0]] = RGBA(0,0,0,0)
+                return
             grid.cell_rows[mouse.get_square(grid_dimensions, sprite_pixels)[1]][mouse.get_square(grid_dimensions, sprite_pixels)[0]] = RGBA(*current_color)
-        
         # Otherwise, get which button on the sidebar is pressed.
         else:
             try:
-                mouse.get_function(sidebar_functions)()
+                # Try to prevent the mouse going off screen from causing unintended presses
+                if not is_drawing:
+                    mouse.get_function(sidebar_functions)()
             except TypeError:
                 pass
 
 # Create GameHandler
-functions_to_call = [update_sidebar, mouse_update]
+functions_to_call = [sidebar_update, mouse_update]
 game = GameHandler(functions_to_call, events, window, frames_per_second)
 
 # Main Loop

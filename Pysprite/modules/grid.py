@@ -1,5 +1,4 @@
 import pygame
-import random
 
 class RGBA:
     def __init__(self, r, g, b, a):
@@ -20,7 +19,7 @@ class Grid:
         for y in range(self.cells_per_row):
             self.cell_rows.append([])
             for x in range(self.cells_per_row):
-                self.cell_rows[y].append(RGBA(random.randint(0, 255), 0, 0, 0))
+                self.cell_rows[y].append(RGBA(0, 0, 0, 0))
     
     def draw(self):
         ## RESPONSIBLE FOR DRAWING THE BACKGROUND {
