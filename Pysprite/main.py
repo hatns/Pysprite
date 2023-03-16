@@ -3,6 +3,7 @@ import pygame
 from modules.gameutils import EventHandler, GameHandler
 from modules.grid import Grid, RGBA
 from modules.mouse import Mouse
+from modules.overlay import draw_overlay
 from PIL import Image
 from tkinter import Tk, filedialog
 root = Tk()
@@ -337,15 +338,18 @@ def mouse_update():
             except TypeError:
                 pass
 
+overlay = pygame.Surface(screen_dimensions, pygame.SRCALPHA)
+
 # Create GameHandler
 functions_to_call = [sidebar_update, mouse_update]
 game = GameHandler(functions_to_call, events, window, frames_per_second)
+draw_overlay(overlay)
 
 # Main Loop
 game_loop_count = 0
 while game_enabled:
     window.fill((0,0,0))
     grid.draw()
-    window.blits([(grid.surface, (0,0)), (sidebar, (512, 0))])
+    window.blits([(grid.surface, (0,0)), (sidebar, (512, 0)), (overlay, (0,0))])
     # No more code allowed after this comment unless u have a good reason for it.
     game.update()
